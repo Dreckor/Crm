@@ -4,11 +4,14 @@ namespace CRM.Models
     {
         public int CustomerId { get; set; }
 
+        public int SellerId { get; set; }
+
         public string CustomerName { get; set; }
 
         public Product InterestProduct { get; set; }
 
-        public int AsignedSeller { get; set; }
+        
+        public virtual Seller ? AsignedSeller { get; set; }
         
 
     }

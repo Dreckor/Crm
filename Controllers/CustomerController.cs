@@ -15,7 +15,7 @@ public class MCustomersController : ControllerBase
         this.customersService = customersService;
     }
 
-    [HttpGet(Name="getCustomers")]
+    [HttpGet]
     public IActionResult Get()
     {
         return Ok(customersService.Get());
@@ -24,17 +24,20 @@ public class MCustomersController : ControllerBase
     [HttpPost]
     public IActionResult Post([FromBody] Customer customer)
     {
-        return Ok(customersService.Post(customer));
+        customersService.Add(customer);
+        return Ok("Successfully added");
     }
 
-    [HttpPut]
-    public IActionResult Put([FromBody] Customer customer)
+    [HttpPut("{id}")]
+    public IActionResult Put(int id, [FromBody] Customer customer)
     {
-        return Ok(customersService.Put(customer));
+        customersService.Update(id, customer);
+        return Ok("Successfully updated");
     }
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
-    {
-        return Ok(customersService.Delete(id));
+    {   
+        customersService.Delete(id);
+        return Ok("Successfully deleted");
     }
 }

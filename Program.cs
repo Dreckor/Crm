@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Serialization;
 using CRM.Services;
+using CRM;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,6 +9,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSqlServer<CRMContext>(builder.Configuration.GetConnectionString("CrmDatabase"));
 builder.Services.AddScoped<ISellersService, SellersService>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddControllersWithViews()

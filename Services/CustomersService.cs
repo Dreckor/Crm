@@ -1,71 +1,56 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Data.SqlClient;
-using System.Data;
-using CRM;
 using CRM.Models;
 namespace CRM.Services;
 
 public class CustomersService : ICustomersService
 {
-    private readonly IConfiguration _configuration;
-
-    public CustomersService(IConfiguration configuration)
+    CRMContext customerContext;
+    public CustomersService(CRMContext customerContext)
     {
-        _configuration = configuration;
+        this.customerContext = customerContext;
     }
-    public async Task<JsonResult> Get()
+    public IEnumerable<Customer> Get()
     {
-        string query = $"select * from dbo.CustomerDB";
-        return new JsonResult(Query(query));
-    }
-
-    public async Task<JsonResult> Post(Customer customer)
-    {
-        string query = $"insert into dbo.CustomerDB values ('{customer.CustomerName}', '{customer.InterestProduct}','{customer.AsignedSeller}')";
-        return new JsonResult(Query(query));
+        
+        return customerContext.Customers;
     }
 
-    public async Task<JsonResult> Put(Customer customer)
+    public async Task Add(Customer customer)
     {
-        string query = $"update dbo.CustomerDB set CustomerName='{customer.CustomerName}', InteresProduct='{customer.InterestProduct}', AsignedSeller='{customer.AsignedSeller}' where CustomerId={customer.CustomerId}";
-        return new JsonResult(Query(query));
+        customerContext.Add(customer);
+        await customerContext.SaveChangesAsync();
     }
 
-    public async Task<JsonResult> Delete(int id)
+    public async Task Update(int id, Customer customer)
     {
-        string query = $"delete from dbo.CustomerDB where CustomerId={id}";
-        return new JsonResult(Query(query));
-    }
-
-    public async Task<JsonResult> Query(string query)
-    {
-        DataTable dataTable = new DataTable();
-        string sqlDataSource = _configuration.GetConnectionString("CrmDatabase");
-        SqlDataReader mReader;
-        using(SqlConnection mCon = new SqlConnection(sqlDataSource))
-        {
-            mCon.Open();
-            using(SqlCommand mCommand = new SqlCommand(query, mCon))
-            {
-                mReader = mCommand.ExecuteReader();
-                dataTable.Load(mReader);
-
-                mReader.Close();
-                mCon.Close();
-            }
+        var currentSeller = customerContext.Customers.Find(id);
+        if(currentSeller != null){
+            currentSeller.CustomerName = customer.CustomerName;
+            await customerContext.SaveChangesAsync();
         }
-
-        return new JsonResult(dataTable);
+        
     }
 
+    public async Task Delete(int id)
+    {
+        var currentSeller = customerContext.Sellers.Find(id);
+        if(currentSeller != null){
+            customerContext.Remove(currentSeller);
+            await customerContext.SaveChangesAsync();
+        }
    
+    }
+    public async Task CreateTable()
+    {
+        customerContext.Database.EnsureCreated();
+        
+    }
 }
 
 public interface ICustomersService
 {
-    Task<JsonResult> Get();
-    Task<JsonResult> Post(Customer customer);
-    Task<JsonResult> Put(Customer customer);
-    Task<JsonResult> Delete(int id);
+    IEnumerable<Customer> Get();
+    Task Add(Customer customer);
+    Task Update(int id, Customer customer);
+    Task Delete(int id);
+    Task CreateTable();
 }

@@ -1,71 +1,56 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Data.SqlClient;
-using System.Data;
-using CRM;
 using CRM.Models;
 namespace CRM.Services;
 
 public class SellersService : ISellersService
 {
-    private readonly IConfiguration _configuration;
-
-    public SellersService(IConfiguration configuration)
+    CRMContext sellerContext;
+    public SellersService(CRMContext sellerContext)
     {
-        _configuration = configuration;
+        this.sellerContext = sellerContext;
     }
-    public async Task<JsonResult> Get()
+    public IEnumerable<Seller> Get()
     {
-        string query = $"select * from dbo.SellersDB";
-        return new JsonResult(Query(query));
-    }
-
-    public async Task<JsonResult> Post(Seller seller)
-    {
-        string query = $"insert into dbo.SellersDB values ('{seller.SellerName}')";
-        return new JsonResult(Query(query));
+        
+        return sellerContext.Sellers;
     }
 
-    public async Task<JsonResult> Put(Seller seller)
+    public async Task Add(Seller seller)
     {
-        string query = $"update dbo.SellersDB set SellerName='{seller.SellerName}' where SellerId={seller.SellerId}";
-        return new JsonResult(Query(query));
+        sellerContext.Add(seller);
+        await sellerContext.SaveChangesAsync();
     }
 
-    public async Task<JsonResult> Delete(int id)
+    public async Task Update(int id, Seller seller)
     {
-        string query = $"delete from dbo.SellersDB where SellerId={id}";
-        return new JsonResult(Query(query));
-    }
-
-    public async Task<JsonResult> Query(string query)
-    {
-        DataTable dataTable = new DataTable();
-        string sqlDataSource = _configuration.GetConnectionString("CrmDatabase");
-        SqlDataReader mReader;
-        using(SqlConnection mCon = new SqlConnection(sqlDataSource))
-        {
-            mCon.Open();
-            using(SqlCommand mCommand = new SqlCommand(query, mCon))
-            {
-                mReader = mCommand.ExecuteReader();
-                dataTable.Load(mReader);
-
-                mReader.Close();
-                mCon.Close();
-            }
+        var currentSeller = sellerContext.Sellers.Find(id);
+        if(currentSeller != null){
+            currentSeller.SellerName = seller.SellerName;
+            await sellerContext.SaveChangesAsync();
         }
-
-        return new JsonResult(dataTable);
+        
     }
 
+    public async Task Delete(int id)
+    {
+        var currentSeller = sellerContext.Sellers.Find(id);
+        if(currentSeller != null){
+            sellerContext.Remove(currentSeller);
+            await sellerContext.SaveChangesAsync();
+        }
    
+    }
+    public async Task CreateTable()
+    {
+        sellerContext.Database.EnsureCreated();
+        
+    }
 }
 
 public interface ISellersService
 {
-    Task<JsonResult> Get();
-    Task<JsonResult> Post(Seller seller);
-    Task<JsonResult> Put(Seller seller);
-    Task<JsonResult> Delete(int id);
+    IEnumerable<Seller> Get();
+    Task Add(Seller seller);
+    Task Update(int id, Seller seller);
+    Task Delete(int id);
+    Task CreateTable();
 }

@@ -4,7 +4,7 @@ using CRM.Models;
 namespace CRM.Controllers;
 
 [ApiController]
-[Route("Sellers/[controller]")]
+[Route("[controller]")]
 public class SellersController : ControllerBase
 {
     private readonly ILogger<SellersController> _logger;
@@ -24,17 +24,27 @@ public class SellersController : ControllerBase
     [HttpPost]
     public IActionResult Post([FromBody] Seller seller)
     {
-        return Ok(sellersService.Post(seller));
+        sellersService.Add(seller);
+        return Ok("Successfully added");
     }
 
-    [HttpPut]
-    public IActionResult Put([FromBody] Seller seller)
+    [HttpPut("{id}")]
+    public IActionResult Put(int id, [FromBody] Seller seller)
     {
-        return Ok(sellersService.Put(seller));
+        sellersService.Update(id, seller);
+        return Ok("Successfully updated");
     }
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
-        return Ok(sellersService.Delete(id));
+        sellersService.Delete(id);
+        return Ok("Successfully deleted");
+    }
+
+    [HttpGet]
+    [Route("CreateDB")]
+    public IActionResult CreateSellerBase(){
+        sellersService.CreateTable();
+        return Ok();
     }
 }
